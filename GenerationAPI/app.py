@@ -27,7 +27,6 @@ def status():
 @app.route("/summarize", methods=["POST"])
 def summarize():
     try:
-        #error if no file is uploaded
         if "file" not in request.files:
             return jsonify({"error": "No file uploaded"}), 400
 
@@ -41,7 +40,6 @@ def summarize():
         print(len(pdf_doc))
         #extract text from supplied page numbers
         extracted_text = extract_text_from_pdf(pdf_doc, page_numbers)
-        #summarize extracted text
         summary = summarizer.summarize_text(extracted_text)
         
         return jsonify({"summary": summary}), 200
@@ -54,12 +52,10 @@ def summarize():
 def summarize_raw():
     try:
         data = request.json
-        #error if no text uploaded
         if not data or "text" not in data:
             return jsonify({"error": "Missing text field in request"}), 400
         
         text = data.get("text", "").strip()
-        #error if only whitespace uploaded
         if not text:
             return jsonify({"error": "Text can not be empty."}), 400
         #summarize the input text
@@ -73,14 +69,11 @@ def summarize_raw():
 def generate_qa_raw():
     try:
         data = request.json
-        #error if no text in request
         if not data or "text" not in data:
             return jsonify({"error": "missing text field in request"}), 400
-        #error if text is whitespace
         text = data.get("text", "").strip()
         if not text:
             return jsonify({"error": "Text can not be empty."}), 400
-        #generate questions
         questions = questionGenerator.generate(text)
 
         return jsonify({"response": questions})
@@ -91,7 +84,6 @@ def generate_qa_raw():
 @app.route("/generate-qa", methods=["POST"])
 def generate_qa():
     try:
-        #error if no file is uploaded
         if "file" not in request.files:
             return jsonify({"error": "No file uploaded"}), 400
 
