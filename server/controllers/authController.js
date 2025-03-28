@@ -1,10 +1,17 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { validatePassword } = require('../utils/passwordValidation');
 
 const register = async (req, res) => {
   try {
     const { email, password } = req.body;
+    
+    // Validate password strength
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      return res.status(400).json({ message: passwordValidation.message });
+    }
     
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -65,6 +72,12 @@ const changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
     const userId = req.user.userId;
+
+    // Validate new password strength
+    const passwordValidation = validatePassword(newPassword);
+    if (!passwordValidation.isValid) {
+      return res.status(400).json({ message: passwordValidation.message });
+    }
 
     // Find user by ID
     const user = await User.findById(userId);
