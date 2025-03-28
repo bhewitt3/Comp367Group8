@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { authApi } from '@/services/api';
+import PasswordRequirements from '@/components/PasswordRequirements';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -63,13 +64,16 @@ export default function RegisterPage() {
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
           />
 
-          <Input
-            label="Password"
-            type="password"
-            required
-            value={formData.password}
-            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-          />
+          <div className="space-y-1">
+            <Input
+              label="Password"
+              type="password"
+              required
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            />
+            <PasswordRequirements password={formData.password} />
+          </div>
 
           <Input
             label="Confirm Password"
