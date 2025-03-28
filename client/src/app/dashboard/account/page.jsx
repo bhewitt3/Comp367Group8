@@ -6,16 +6,65 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { FiUser, FiMail, FiLock, FiTrash2 } from 'react-icons/fi';
+import { useRouter } from 'next/navigation';
+import { authApi } from '@/services/api';
 
 export default function AccountPage() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
   const [formData, setFormData] = useState({
     email: user?.email || '',
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if (formData.newPassword !== formData.confirmPassword) {
+      setError('New passwords do not match');
+      return;
+    }
+
+    try {
+      await authApi.changePassword(formData.currentPassword, formData.newPassword);
+      setSuccess('Password changed successfully');
+      setFormData({
+        ...formData,
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to change password');
+    }
+  };
+
+  const handleDeleteAccount = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if (!window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      await authApi.deleteAccount(deletePassword);
+      await logout();
+      router.push('/');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to delete account');
+    }
+  };
 
   return (
     <ProtectedRoute>
@@ -26,6 +75,18 @@ export default function AccountPage() {
             Manage your account settings and preferences
           </p>
         </div>
+
+        {error && (
+          <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
+            {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="mb-4 p-4 bg-green-100 text-green-700 rounded-lg">
+            {success}
+          </div>
+        )}
 
         <div className="space-y-6">
           {/* Profile Section */}
@@ -66,14 +127,14 @@ export default function AccountPage() {
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
               Security
             </h2>
-            <div className="space-y-4">
+            <form onSubmit={handlePasswordChange} className="space-y-4">
               <Input
                 label="Current Password"
                 type="password"
                 value={formData.currentPassword}
                 onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
                 icon={<FiLock className="text-gray-400" />}
-                disabled={!isEditing}
+                required
               />
               <Input
                 label="New Password"
@@ -81,7 +142,7 @@ export default function AccountPage() {
                 value={formData.newPassword}
                 onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
                 icon={<FiLock className="text-gray-400" />}
-                disabled={!isEditing}
+                required
               />
               <Input
                 label="Confirm New Password"
@@ -89,41 +150,38 @@ export default function AccountPage() {
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                 icon={<FiLock className="text-gray-400" />}
-                disabled={!isEditing}
+                required
               />
-            </div>
+              <Button type="submit" className="w-full">
+                Change Password
+              </Button>
+            </form>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex justify-between">
-            <div className="space-x-4">
-              {isEditing ? (
-                <>
-                  <Button
-                    onClick={() => setIsEditing(false)}
-                    variant="secondary"
-                  >
-                    Cancel
-                  </Button>
-                  <Button>
-                    Save Changes
-                  </Button>
-                </>
-              ) : (
-                <Button
-                  onClick={() => setIsEditing(true)}
-                >
-                  Edit Profile
-                </Button>
-              )}
-            </div>
-            <Button
-              variant="secondary"
-              className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/30"
-            >
-              <FiTrash2 className="w-4 h-4 mr-2" />
+          {/* Delete Account Section */}
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm">
+            <h2 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-4">
               Delete Account
-            </Button>
+            </h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Once you delete your account, there is no going back. Please be certain.
+            </p>
+            <form onSubmit={handleDeleteAccount} className="space-y-4">
+              <Input
+                label="Confirm Password"
+                type="password"
+                value={deletePassword}
+                onChange={(e) => setDeletePassword(e.target.value)}
+                icon={<FiLock className="text-gray-400" />}
+                required
+              />
+              <Button
+                type="submit"
+                className="w-full bg-red-600 hover:bg-red-700 text-white"
+              >
+                Delete Account
+              </Button>
+            </form>
           </div>
         </div>
       </div>

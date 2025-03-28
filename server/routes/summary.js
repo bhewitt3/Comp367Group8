@@ -2,7 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const authenticateToken = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 const Summary = require('../models/Summary');
 
 const router = express.Router();
@@ -36,7 +36,7 @@ router.post('/upload', authenticateToken, upload.single('pdf'), async (req, res)
       storedFilePath: `/summary/${req.file.filename}`,
       extractedText: "",
       summary: "",
-      userId: req.user._id
+      userId: req.user.userId
     });
 
     // Save to MongoDB
@@ -65,7 +65,7 @@ router.post('/upload-raw', authenticateToken, async (req, res) => {
       storedFilePath: "NA",
       extractedText: text,
       summary: summaryText,
-      userId: req.user._id
+      userId: req.user.userId
     });
 
     await summary.save();
@@ -110,7 +110,7 @@ router.post('/update-summary', authenticateToken, async (req, res) => {
   try {
     // Find and update the summary document
     const result = await Summary.findOneAndUpdate(
-      { _id: summaryId, userId: req.user._id },  // Only find docs owned by this user
+      { _id: summaryId, userId: req.user.userId },  // Only find docs owned by this user
       { $set: { summary: summary } },
       { new: true }  // Return the updated document
     );
@@ -140,7 +140,7 @@ router.get('/summaries', authenticateToken, async (req, res) => {
   }
   
   try {
-    const summaries = await Summary.find({ userId: req.user._id })
+    const summaries = await Summary.find({ userId: req.user.userId })
                                    .sort({ createdAt: -1 });  // Sort by latest
     
     res.json({ success: true, summaries });
@@ -158,7 +158,7 @@ router.get('/summary/:id', authenticateToken, async (req, res) => {
   try {
     const summary = await Summary.findOne({ 
       _id: req.params.id, 
-      userId: req.user._id 
+      userId: req.user.userId 
     });
     
     if (!summary) {
@@ -185,7 +185,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const summary = await Summary.findOneAndDelete({
       _id: req.params.id,
-      userId: req.user._id
+      userId: req.user.userId
     });
 
     if (!summary) {
