@@ -10,6 +10,7 @@ const cors = require('cors');
 const connectDB = require('./config/database');
 const authRoutes = require('./routes/authRoutes');
 const summaryRoutes = require('./routes/summary');
+const flashcardRoutes = require('./routes/flashcard');
 const path = require('path');
 // Initialize express app
 const app = express();
@@ -46,6 +47,7 @@ app.get('/api/health', (req, res) => {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/summary', summaryRoutes);
+app.use('/api/flashcard', flashcardRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

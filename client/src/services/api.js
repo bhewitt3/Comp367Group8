@@ -207,3 +207,59 @@ export const deleteSummary = async (summaryId) => {
     return { success: false, error: error.message };
   }
 };
+
+export const fetchFlashCards = async (flashcardId) => {
+  console.log('fetchFlashCards');
+  try {
+    const token = localStorage.getItem('token'); // Get JWT token from local storage
+
+    if (!token) {
+      return { success: false, error: 'User not authenticated' };
+    }
+
+    const response = await axios.get(`${API_URL}/flashcard/flashcards`, {
+      headers: {
+        'Authorization': `Bearer ${token}`, // Send JWT token in header
+      },
+    });
+    return {
+      success: response.data.success,
+      flashcards: response.data.flashcards,
+    };
+
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const uploadRawTextFlashcardDeck = async (deckName, extractedText, qaPairs) => {
+  try {
+    // console.log('🔍 Uploading raw text as flashcard deck:', { deckName, extractedText, qaPairs });
+    
+    // Step 1: Create a flashcard deck in Express.js server with given deckName
+    const deckResponse = await api.post('/flashcard/flashcardDeck', { deckName, extractedText });
+    const deckId = deckResponse.data._id;
+
+    // console.log('✅ Flashcard deck created successfully:', deckResponse.data);
+
+    // Step 2: Save each Q/A pair as a flashcard
+    const flashcardPromises = qaPairs.map(({ question, answer }) => {
+      return api.post('/flashcard/flashcard', { question, answer, deckId });
+    });
+
+    const flashcardResults = await Promise.all(flashcardPromises);
+    // console.log('✅ Flashcards saved successfully:', flashcardResults.map(res => res.data));
+
+    return {
+      success: true,
+      deckId: deckId,
+      flashcards: flashcardResults.map(res => res.data),
+    };
+
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+
+
