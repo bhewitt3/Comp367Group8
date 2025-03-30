@@ -100,7 +100,7 @@ def generate_qa():
         #generate questions from extracted text
         questions = questionGenerator.generate(extracted_text)
         
-        return jsonify({"response": questions}), 200
+        return jsonify({"response": {"extracted_text": extracted_text, "questions": questions}}), 200
 
     except Exception as e:
         return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500

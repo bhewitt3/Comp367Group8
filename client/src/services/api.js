@@ -226,7 +226,7 @@ export const fetchFlashcardDecks = async () => {
   }
 };
 
-export const uploadRawTextFlashcardDeck = async (deckName, extractedText, qaPairs) => {
+export const uploadFlashcardDeck = async (deckName, extractedText, qaPairs) => {
   try {
     // console.log('🔍 Uploading raw text as flashcard deck:', { deckName, extractedText, qaPairs });
     

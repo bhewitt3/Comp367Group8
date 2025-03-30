@@ -4,24 +4,24 @@ import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
-import { updateSummary, uploadPdf } from '@/services/api';
 import axios from 'axios';
+import { uploadFlashcardDeck } from '@/services/api';
 
 export default function FileUploadModal({ isOpen, onClose }) {
   const [file, setFile] = useState(null);
   const [fileUrl, setFileUrl] = useState('');
   const [status, setStatus] = useState(null);
-  const [summary, setSummary] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [summaryId, setSummaryId] = useState(null);
   const [startPage, setStartPage] = useState(1);
   const [endPage, setEndPage] = useState(5);
+  const [flashcards, setFlashcards] = useState(null);
+  const [flashcardDeckId, setFlashcardDeckId] = useState(null);
 
   // File size constraints
   const MIN_FILE_SIZE = 0.01;
   const MAX_FILE_SIZE = 100;
-  const FLASK_API_URL = 'http://127.0.0.1:3003/summarize';
+  const FLASK_API_URL = 'http://127.0.0.1:3003/generate-qa';
 
   const handleFileChange = useCallback(async (e) => {
     const selectedFile = e.target.files?.[0];
@@ -45,12 +45,10 @@ export default function FileUploadModal({ isOpen, onClose }) {
 
     setFile(selectedFile);
     setFileUrl(URL.createObjectURL(selectedFile));
-    setSummary('');
-    setSummaryId(null);
     setStatus({ message: 'PDF selected', type: 'success' });
   }, []);
 
-  const handleGenerateSummary = async () => {
+  const handleSubmit = async () => {
     if (!file) return;
 
     setIsGenerating(true);
@@ -75,29 +73,33 @@ export default function FileUploadModal({ isOpen, onClose }) {
       formData.append('pages', pageRange || "1-5");
 
       const flaskResponse = await axios.post(FLASK_API_URL, formData);
-      if (!flaskResponse.data.summary){
-        setStatus({message: 'Failed to generate summary', type: 'error'});
+
+      if (flaskResponse.status !== 200) {
+        setStatus({ message: 'Failed to generate flashcard deck. Please try again.', type: 'error' });
+        console.log("Flask response is not 200.");
+        return;
+      }
+
+      const qaPairs = flaskResponse.data.response.questions;
+      const extractedText = flaskResponse.data.response.extracted_text;
+      
+      if (!qaPairs || qaPairs.length === 0) {
+        setStatus({ message: 'No flashcards generated. Please try again.', type: 'error' });
         console.log("Flask response is empty.");
         return;
       }
       
-      if (flaskResponse.status === 200) {
-        const uploadResponse = await uploadPdf(file);
-        if (!uploadResponse.success) {
-          throw new Error('Failed to upload PDF');
-        }
-        const updateResponse = await updateSummary(uploadResponse.summaryId, flaskResponse.data.summary);
-
-        if (updateResponse.success) {
-          setSummary(flaskResponse.data.summary);
-          setSummaryId(uploadResponse.summaryId);
-          setStatus({ message: 'Summary generated successfully', type: 'success' });
-        }
+      const uploadResponse = await uploadFlashcardDeck(file.name, extractedText, qaPairs);
+      if (!uploadResponse.success) {
+        throw new Error('Failed to generate flashcard deck');
       }
+      setFlashcards(uploadResponse.flashcards);
+      setFlashcardDeckId(uploadResponse.deckId);
+      setStatus({ message: 'Flashcard deck generated successfully', type: 'success' });
     } catch (error) {
-      console.error('Error generating summary:', error);
+      console.error('Error generating flashcard deck:', error);
       setStatus({ 
-        message: 'Failed to generate summary. Please try again.', 
+        message: 'Failed to generate flashcard deck. Please try again.', 
         type: 'error' 
       });
     } finally {
@@ -113,7 +115,7 @@ export default function FileUploadModal({ isOpen, onClose }) {
             Upload PDF
           </h2>
           <p className="text-gray-600 dark:text-gray-400">
-            Select a PDF file to generate a summary
+            Select a PDF file to generate a flashcard deck
           </p>
         </div>
 
@@ -165,35 +167,39 @@ export default function FileUploadModal({ isOpen, onClose }) {
           </Button>
           {file && (
             <Button
-              onClick={handleGenerateSummary}
+              onClick={handleSubmit}
               disabled={isGenerating}
             >
-              {isGenerating ? 'Generating...' : 'Generate Summary'}
+              {isGenerating ? 'Generating...' : 'Generate Flashcard Deck'}
             </Button>
           )}
         </div>
 
-        {/* Summary Display */}
-        {summaryId && !summary && !isGenerating ? (
+        {/* Flashcard Deck Display */}
+        {flashcardDeckId && !flashcards && !isGenerating ? (
           <div className="mt-6 p-6 border rounded-lg bg-gray-50 dark:bg-gray-700/50">
             <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
-              No Summary Created
+              No Flashcard Deck Created
             </h3>
             <p className="whitespace-pre-line text-gray-700 dark:text-gray-300">
               Check if page range of document has been exceeded.
             </p>
           </div>
-        ) : summary ? (
+        ) : flashcards ? (
           <div className="mt-6 p-6 border rounded-lg bg-gray-50 dark:bg-gray-700/50">
             <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
-              Generated Summary
+              Generated Flashcard Deck
             </h3>
-            <p className="whitespace-pre-line text-gray-700 dark:text-gray-300">
-              {summary}
-            </p>
+            <ul className="text-gray-700 dark:text-gray-300">
+              {flashcards.map((flashcard, index) => (
+                <li key={index} className="mb-2">
+                  <strong>Q:</strong> {flashcard.question} <br />
+                  <strong>A:</strong> {flashcard.answer}
+                </li>
+              ))}
+            </ul>
           </div>
         ) : null}
-        
       </div>
     </Modal>
   );

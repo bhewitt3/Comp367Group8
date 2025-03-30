@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import axios from 'axios';
-import { uploadRawTextFlashcardDeck } from '@/services/api';
+import { uploadFlashcardDeck } from '@/services/api';
 
 // Flask API route to generate QA pairs from raw text
 const FLASK_API_URL = 'http://127.0.0.1:3003/generate-qa-raw';
@@ -56,7 +56,7 @@ export default function TextInputModal({ isOpen, onClose }) {
       }
 
       // Step 2: Upload the generated flashcards to the backend express.js server
-      const uploadResponse = await uploadRawTextFlashcardDeck(title, text, qaPairs);
+      const uploadResponse = await uploadFlashcardDeck(title, text, qaPairs);
 
       if (!uploadResponse.success) {
         throw new Error("Failed to upload raw text flashcard deck");
