@@ -8,6 +8,7 @@ import { fetchFlashcardDecks, deleteFlashcardDeck } from '@/services/api';
 import { FiUpload, FiFileText, FiTrash } from 'react-icons/fi'; // Import the trash icon
 import FileUploadModal from './components/FileUploadModal';
 import TextInputModal from './components/TextInputModal';
+import FlashcardModal from './components/FlashcardModal';
 
 export default function FlashcardPage() {
   const router = useRouter();
@@ -261,28 +262,10 @@ export default function FlashcardPage() {
         />
 
         {/* Flashcard Deck View Modal */}
-        <Modal isOpen={showFlashcardDeckModal} onClose={() => setShowFlashcardDeckModal(false)}>
-          {selectedFlashcardDeck && (
-            <div className="space-y-4">
-              <div className="flex justify-between items-start">
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  {selectedFlashcardDeck.name}
-                </h3>
-              </div>
-              
-              <div className="text-sm text-gray-500 dark:text-gray-400">
-                Created: {formatDate(selectedFlashcardDeck.createdAt)}
-              </div>
-
-              <div className="border rounded p-4 bg-gray-50 dark:bg-gray-700">
-                <h4 className="font-medium mb-2 text-gray-900 dark:text-white">Flashcard Deck:</h4>
-                <p className="whitespace-pre-line text-gray-700 dark:text-gray-300">
-                  {selectedFlackcardDeck.text || 'No text content available.'}
-                </p>
-              </div>
-            </div>
-          )}
-        </Modal>
+        <FlashcardModal 
+          isOpen={showFlashcardDeckModal} 
+          onClose={() => setShowFlashcardDeckModal(false)} 
+          flashcardDeck={selectedFlashcardDeck}/>
       </div>
     </ProtectedRoute>
   );

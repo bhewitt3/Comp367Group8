@@ -93,6 +93,7 @@ router.get('/flashcard-decks', authenticateToken, async (req, res) => {
   
   try {
     const flashcardDecks = await FlashcardDeck.find({ userId: req.user.userId })
+          .populate('flashcards')
           .sort({ createdAt: -1 }); // Sort by latest
     
     res.json({ success: true, flashcardDecks });
