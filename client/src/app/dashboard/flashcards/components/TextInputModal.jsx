@@ -89,7 +89,7 @@ export default function TextInputModal({ isOpen, onClose }) {
             </div>
           )}
           <p className="text-gray-600 dark:text-gray-400">
-            Give Your Flaskcard Deck a Name
+            Give Your Flashcard Deck a Name
           </p>
           <input 
             type="text"

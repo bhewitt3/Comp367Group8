@@ -101,5 +101,37 @@ router.get('/flashcard-decks', authenticateToken, async (req, res) => {
   }
 });
 
+router.delete('/flashcard-deck/:deckId', authenticateToken, async (req, res) => {
+  console.log('Deleting flashcard deck');
+  
+  if (!req.user) {
+    return res.status(401).json({ message: 'User not authenticated' });
+  }
+
+  const { deckId } = req.params;
+
+  try {
+    const deck = await FlashcardDeck.findById(deckId);
+    if (!deck) {
+      return res.status(404).json({ error: 'Flashcard deck not found' });
+    }
+
+    // Ensure the user owns the deck
+    if (deck.userId.toString() !== req.user.userId) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    // Delete all flashcards in this deck
+    await Flashcard.deleteMany({ deckId });
+
+    // Delete the deck itself
+    await deck.deleteOne();
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error deleting flashcard deck:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 module.exports = router;

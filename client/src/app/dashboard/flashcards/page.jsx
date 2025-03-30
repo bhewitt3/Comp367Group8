@@ -82,31 +82,29 @@ export default function FlashcardPage() {
     setShowFlashcardDeckModal(true);
   };
 
-  /*
-  const handleDelete = async (summaryId) => {
+  const handleDelete = async (flashcardDeckId) => {
     // Ask for confirmation
-    const isConfirmed = window.confirm('Are you sure you want to delete this summary?');
+    const isConfirmed = window.confirm('Are you sure you want to delete this Flashcard Deck?');
     if (isConfirmed) {
       try {
-        const response = await deleteSummary(summaryId); // Call the delete function
+        const response = await deleteFlashcardDeck(flashcardDeckId);
         if (response.success) {
-          // Remove the deleted summary from the local state
-          setSummaries(summaries.filter(summary => summary._id !== summaryId));
+          // reload the flashcard decks after deleting
+          loadFlashcardDecks();
         } else {
-          alert('Failed to delete summary. Please try again.');
+          alert('Failed to delete flashcard deck. Please try again.');
         }
       } catch (error) {
-        console.error('Error deleting summary:', error);
-        alert('An error occurred while deleting the summary.');
+        console.error('Error deleting flashcard deck:', error);
+        alert('An error occurred while deleting the flashcard deck.');
       }
     }
-    };
-    */
+  };
 
   return (
     <ProtectedRoute>
       <div className="space-y-6">
-        {/* Create Summary Card */}
+        {/* Create Flashcard Deck Card */}
         <div 
           onClick={() => setIsMethodModalOpen(true)}
           className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm cursor-pointer hover:shadow-md transition-shadow border-2 border-dashed border-gray-300 dark:border-gray-600"
@@ -115,10 +113,10 @@ export default function FlashcardPage() {
             <div className="text-center">
               <span className="text-4xl mb-2">➕</span>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mt-2">
-                Create New Flashcard
+                Create New Flashcard Deck
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                Upload a PDF or paste text to generate a summary
+                Upload a PDF or paste text to generate a flashcard deck
               </p>
             </div>
           </div>
@@ -182,7 +180,7 @@ export default function FlashcardPage() {
                         View
                       </button>
                       <button 
-                        onClick={() => handleDelete(summary._id)} 
+                        onClick={() => handleDelete(flashcardDeck._id)}
                         className="ml-4 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 font-medium"
                       >
                         <FiTrash className="inline-block mr-1" /> Delete
@@ -205,7 +203,7 @@ export default function FlashcardPage() {
         <Modal isOpen={isMethodModalOpen} onClose={() => setIsMethodModalOpen(false)}>
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-              Choose Summary Method
+              Choose Flashcard Deck Method
             </h2>
             <p className="text-gray-600 dark:text-gray-400">
               How do you want to provide your content?
@@ -279,7 +277,7 @@ export default function FlashcardPage() {
               <div className="border rounded p-4 bg-gray-50 dark:bg-gray-700">
                 <h4 className="font-medium mb-2 text-gray-900 dark:text-white">Flashcard Deck:</h4>
                 <p className="whitespace-pre-line text-gray-700 dark:text-gray-300">
-                  {selectedFlackcardDeck.text || 'No summary content available.'}
+                  {selectedFlackcardDeck.text || 'No text content available.'}
                 </p>
               </div>
             </div>

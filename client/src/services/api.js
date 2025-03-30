@@ -125,7 +125,7 @@ export const fetchExtractedText = async (summaryId) => {
 };
 
 export const fetchSummaries = async () => {
-  console.log('fetchSummaries');
+  // console.log('fetchSummaries');
   try {
     const token = localStorage.getItem('token'); // Get JWT token from local storage
 
@@ -209,7 +209,7 @@ export const deleteSummary = async (summaryId) => {
 };
 
 export const fetchFlashcardDecks = async () => {
-  console.log('fetchFlashCards');
+  // console.log('fetchFlashCards');
   try {
     const response = await api.get(`/flashcard/flashcard-decks`);
 
@@ -252,6 +252,21 @@ export const uploadRawTextFlashcardDeck = async (deckName, extractedText, qaPair
     };
 
   } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+// 🔹 Add the deleteSummary function
+export const deleteFlashcardDeck = async (deckId) => {
+  try {
+    const response = await api.delete(`/flashcard/flashcard-deck/${deckId}`);
+
+    return {
+      success: response.data.success,
+      message: response.data.message,
+    };
+  } catch (error) {
+    console.error('🚨 Error deleting summary:', error.message);
     return { success: false, error: error.message };
   }
 };
