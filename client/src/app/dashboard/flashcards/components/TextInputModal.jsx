@@ -59,7 +59,7 @@ export default function TextInputModal({ isOpen, onClose }) {
       const uploadResponse = await uploadRawTextFlashcardDeck(title, text, qaPairs);
 
       if (!uploadResponse.success) {
-        throw new Error("Failed to upload raw text summary");
+        throw new Error("Failed to upload raw text flashcard deck");
       }
 
       setFlashcards(uploadResponse.flashcards);

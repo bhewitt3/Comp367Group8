@@ -17,9 +17,9 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // Route to create a flashcard deck
-router.post('/flashcardDeck', authenticateToken, async (req, res) => {
+router.post('/flashcard-deck', authenticateToken, async (req, res) => {
 
-  console.log('Creating flashcard deck');
+  // console.log('Creating flashcard deck');
   if (!req.user) {
     return res.status(401).json({ message: 'User not authenticated' });
   }
@@ -83,5 +83,23 @@ router.post('/flashcard', async (req, res) => {
     res.status(500).json({ error: 'Failed to create flashcard' });
   }
 });
+
+// Get all flashcard decks for a user
+router.get('/flashcard-decks', authenticateToken, async (req, res) => {
+  // console.log('Getting flashcard decks');
+  if (!req.user) {
+    return res.status(401).json({ message: 'User not authenticated' });
+  }
+  
+  try {
+    const flashcardDecks = await FlashcardDeck.find({ userId: req.user.userId })
+          .sort({ createdAt: -1 }); // Sort by latest
+    
+    res.json({ success: true, flashcardDecks });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 
 module.exports = router;

@@ -4,36 +4,42 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { Modal } from '@/components/ui/Modal';
-import { fetchSummaries, deleteSummary } from '@/services/api'; 
+import { fetchFlashcardDecks, deleteFlashcardDeck } from '@/services/api'; 
 import { FiUpload, FiFileText, FiTrash } from 'react-icons/fi'; // Import the trash icon
 import FileUploadModal from './components/FileUploadModal';
 import TextInputModal from './components/TextInputModal';
 
-export default function FlashCardPage() {
+export default function FlashcardPage() {
   const router = useRouter();
-  const [summaries, setSummaries] = useState([]);
+  const [flashcardDecks, setFlashcardDecks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isMethodModalOpen, setIsMethodModalOpen] = useState(false);
   const [isFileModalOpen, setIsFileModalOpen] = useState(false);
   const [isTextModalOpen, setIsTextModalOpen] = useState(false);
-  const [selectedSummary, setSelectedSummary] = useState(null);
-  const [showSummaryModal, setShowSummaryModal] = useState(false);
+  const [selectedFlashcardDeck, setSelectedFlashcardDeck] = useState(null);
+  const [showFlashcardDeckModal, setShowFlashcardDeckModal] = useState(false);
   const [sortField, setSortField] = useState('createdAt');
   const [sortDirection, setSortDirection] = useState('desc');
 
   useEffect(() => {
-    loadSummaries();
+    loadFlashcardDecks();
   }, []);
 
-  const loadSummaries = async () => {
+  const loadFlashcardDecks = async () => {
     setLoading(true);
     try {
-      const response = await fetchSummaries();
-      if (response.success) {
-        setSummaries(response.summaries);
+      const response = await fetchFlashcardDecks();
+
+      // console.log('Flashcard Decks Response:', response);
+      if (response?.success) {
+        setFlashcardDecks(response.flashcardDecks || []); // Ensure it's always an array
+      }
+      else {
+        console.error('Failed to load flashcard decks:', response?.error);
+        setFlashcardDecks([]);
       }
     } catch (error) {
-      console.error('Error loading summaries:', error);
+      console.error('Error loading flashcard decks:', error);
     } finally {
       setLoading(false);
     }
@@ -48,7 +54,7 @@ export default function FlashCardPage() {
     }
   };
 
-  const sortedSummaries = [...summaries].sort((a, b) => {
+  const sortedFlashcardDecks = [...flashcardDecks].sort((a, b) => {
     if (sortField === 'createdAt') {
       return sortDirection === 'asc' 
         ? new Date(a.createdAt) - new Date(b.createdAt)
@@ -71,11 +77,12 @@ export default function FlashCardPage() {
     });
   };
 
-  const viewSummary = (summary) => {
-    setSelectedSummary(summary);
-    setShowSummaryModal(true);
+  const viewFlashcardDeck = (flashcardDeck) => {
+    setSelectedFlashcardDeck(flashcardDeck);
+    setShowFlashcardDeckModal(true);
   };
 
+  /*
   const handleDelete = async (summaryId) => {
     // Ask for confirmation
     const isConfirmed = window.confirm('Are you sure you want to delete this summary?');
@@ -93,7 +100,8 @@ export default function FlashCardPage() {
         alert('An error occurred while deleting the summary.');
       }
     }
-  };
+    };
+    */
 
   return (
     <ProtectedRoute>
@@ -116,27 +124,27 @@ export default function FlashCardPage() {
           </div>
         </div>
 
-        {/* Summaries Table */}
+        {/* Flashcard Decks Table */}
         {loading ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-rose-500"></div>
           </div>
-        ) : summaries.length > 0 ? (
+        ) : flashcardDecks.length > 0 ? (
           <div className="overflow-x-auto shadow-md rounded-lg">
             <table className="min-w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
               <thead>
                 <tr className="bg-gray-50 dark:bg-gray-700">
                   <th 
                     className="px-4 py-3 border-b border-gray-200 dark:border-gray-600 text-left font-medium text-gray-700 dark:text-gray-200 cursor-pointer"
-                    onClick={() => handleSort('originalFileName')}
+                    onClick={() => handleSort('name')}
                   >
                     Name
-                    {sortField === 'originalFileName' && (
+                    {sortField === 'name' && (
                       <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
                     )}
                   </th>
                   <th className="px-4 py-3 border-b border-gray-200 dark:border-gray-600 text-left font-medium text-gray-700 dark:text-gray-200">
-                    Summary Preview
+                    Flashcard Deck Text Preview
                   </th>
                   <th 
                     className="px-4 py-3 border-b border-gray-200 dark:border-gray-600 text-left font-medium text-gray-700 dark:text-gray-200 cursor-pointer"
@@ -153,22 +161,22 @@ export default function FlashCardPage() {
                 </tr>
               </thead>
               <tbody>
-                {sortedSummaries.map((summary) => (
-                  <tr key={summary._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                {sortedFlashcardDecks.map((flashcardDeck) => (
+                  <tr key={flashcardDeck._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                     <td className="px-4 py-3 border-b border-gray-200 dark:border-gray-600">
-                      {summary.originalFileName}
+                      {flashcardDeck.name}
                     </td>
                     <td className="px-4 py-3 border-b border-gray-200 dark:border-gray-600">
-                      {summary.summary && summary.summary.length > 100
-                       ? `${summary.summary.slice(0, 100)}...`
-                       : summary.summary || 'No Summary'}
+                      {flashcardDeck.extractedText && flashcardDeck.extractedText.length > 50
+                       ? `${flashcardDeck.extractedText.slice(0, 50)}...`
+                       : flashcardDeck.extractedText || 'No Text'}
                     </td>
                     <td className="px-4 py-3 border-b border-gray-200 dark:border-gray-600">
-                      {formatDate(summary.createdAt)}
+                      {formatDate(flashcardDeck.createdAt)}
                     </td>
                     <td className="px-4 py-3 border-b border-gray-200 dark:border-gray-600">
                       <button 
-                        onClick={() => viewSummary(summary)}
+                        onClick={() => viewFlashcardDeck(flashcardDeck)}
                         className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
                       >
                         View
@@ -188,7 +196,7 @@ export default function FlashCardPage() {
         ) : (
           <div className="text-center p-6 bg-gray-50 dark:bg-gray-800 rounded-lg">
             <p className="text-gray-500 dark:text-gray-400">
-              No summaries yet. Create your first one!
+              No flashcard decks yet. Create your first one!
             </p>
           </div>
         )}
@@ -241,7 +249,7 @@ export default function FlashCardPage() {
           isOpen={isFileModalOpen}
           onClose={() => {
             setIsFileModalOpen(false);
-            loadSummaries();
+            loadFlashcardDecks();
           }}
         />
 
@@ -250,28 +258,28 @@ export default function FlashCardPage() {
           isOpen={isTextModalOpen}
           onClose={() => {
             setIsTextModalOpen(false);
-            loadSummaries();
+            loadFlashcardDecks()
           }}
         />
 
-        {/* Summary View Modal */}
-        <Modal isOpen={showSummaryModal} onClose={() => setShowSummaryModal(false)}>
-          {selectedSummary && (
+        {/* Flashcard Deck View Modal */}
+        <Modal isOpen={showFlashcardDeckModal} onClose={() => setShowFlashcardDeckModal(false)}>
+          {selectedFlashcardDeck && (
             <div className="space-y-4">
               <div className="flex justify-between items-start">
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  {selectedSummary.originalFileName}
+                  {selectedFlashcardDeck.name}
                 </h3>
               </div>
               
               <div className="text-sm text-gray-500 dark:text-gray-400">
-                Created: {formatDate(selectedSummary.createdAt)}
+                Created: {formatDate(selectedFlashcardDeck.createdAt)}
               </div>
 
               <div className="border rounded p-4 bg-gray-50 dark:bg-gray-700">
-                <h4 className="font-medium mb-2 text-gray-900 dark:text-white">Summary:</h4>
+                <h4 className="font-medium mb-2 text-gray-900 dark:text-white">Flashcard Deck:</h4>
                 <p className="whitespace-pre-line text-gray-700 dark:text-gray-300">
-                  {selectedSummary.summary || 'No summary content available.'}
+                  {selectedFlackcardDeck.text || 'No summary content available.'}
                 </p>
               </div>
             </div>
