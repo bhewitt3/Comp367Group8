@@ -1,3 +1,5 @@
+//Accout page with password change and delete account functionality accessible only to logged-in users through 
+//dashboard route. The page includes a form for changing the password and a button to delete the account.
 'use client';
 
 import { useState } from 'react';
